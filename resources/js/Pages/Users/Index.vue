@@ -12,7 +12,7 @@
         cols='12'
         md='12'
       >
-        <v-card>
+        <v-card :disabled="tableIsLoading">
           <v-card-text>
             <v-row class="align-center">
               <v-col cols="12" md="3">
@@ -109,7 +109,7 @@
                 <template v-slot:item.action="{ item }">
                   <v-tooltip top>
                     <template v-slot:activator="{ on, attrs }">
-                      <v-btn @click="editDialog = true" v-bind="attrs" v-on="on" color="primary" small icon>
+                      <v-btn @click="editRecord(item)" v-bind="attrs" v-on="on" color="primary" small icon>
                         <v-icon small>
                           mdi-pencil-outline
                         </v-icon>
@@ -119,13 +119,13 @@
                   </v-tooltip>
                   <v-tooltip top>
                     <template v-slot:activator="{ on, attrs }">
-                      <v-btn v-bind="attrs" v-on="on" color="error" small icon>
+                      <v-btn @click="deleteRecord(item.id)" v-bind="attrs" v-on="on" color="error" small icon>
                         <v-icon small>
                           mdi-delete-outline
                         </v-icon>
                       </v-btn>
                     </template>
-                    <span>ویرایش</span>
+                    <span>حذف</span>
                   </v-tooltip>
                 </template>
                 <template #footer>
@@ -141,42 +141,11 @@
           </v-row>
         </v-card>
       </v-col>
-
     </v-row>
-    <v-dialog
-      v-model="editDialog"
-      max-width="1000"
-    >
-      <v-card>
-        <v-card-title class="text-h6 text-center">
-          آیا مطمئن به حذف هستید؟
-        </v-card-title>
-
-        <v-card-text>
-          Let Google help apps determine location. This means sending anonymous location data to Google, even when no apps are running.
-        </v-card-text>
-
-        <v-card-actions>
-          <v-spacer></v-spacer>
-
-          <v-btn
-            color="green darken-1"
-            text
-            @click="dialog = false"
-          >
-            Disagree
-          </v-btn>
-
-          <v-btn
-            color="green darken-1"
-            text
-            @click="dialog = false"
-          >
-            Agree
-          </v-btn>
-        </v-card-actions>
-      </v-card>
-    </v-dialog>
+    <ConfirmDialog ref="deleteConfirm"></ConfirmDialog>
+    <Dialog ref="editDialog">
+      <Edit :record.sync="selectedRecord" @close="$refs.editDialog.close()"></Edit>
+    </Dialog>
   </div>
 </template>
 
@@ -186,6 +155,9 @@ import Pagination from '@Pages/Components/Pagination'
 import Create from './Create'
 import { Link } from '@inertiajs/inertia-vue'
 import table from '@/mixins/table'
+import ConfirmDialog from "@Pages/Components/ConfirmDialog";
+import Dialog from "@Pages/Components/Dialog";
+import Edit from "./Edit";
 
 export default {
   name: 'Index',
@@ -193,6 +165,9 @@ export default {
   layout: Admin,
   props: ['records'],
   components: {
+    ConfirmDialog,
+    Dialog,
+    Edit,
     Create,
     Link,
     Pagination,
@@ -200,6 +175,8 @@ export default {
   data(){
     return {
       editDialog: false,
+      deleteDialog: false,
+      selectedRecord: {},
       filters: {
         name: this.tableProps.filters.name,
         username: this.tableProps.filters.username,
@@ -215,6 +192,19 @@ export default {
         { text: "تاریخ ایجاد", value: "created_at" },
         { text: "عملیات", value: "action", sortable: false },
       ],
+    }
+  },
+  methods: {
+    deleteRecord(id) {
+      this.$refs.deleteConfirm.open('حذف کاربر', 'آیا مطمئن هستید؟', { color: 'red' }).then((confirm) => {
+        if(confirm){
+          this.$inertia.delete(route('users.destroy',{'user': id}))
+        }
+      })
+    },
+    editRecord(record) {
+      this.selectedRecord = record
+      this.$refs.editDialog.open("ویرایش کاربر با شناسه " + this.selectedRecord.id,{width: 800})
     }
   }
 }

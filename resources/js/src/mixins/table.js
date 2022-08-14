@@ -5,6 +5,7 @@ export default {
   data(){
     return {
       showAdvancedSearch: !isEmpty(this.tableProps.filters),
+      tableIsLoading: false
     }
   },
   watch: {
@@ -22,6 +23,8 @@ export default {
           replace: true,
           preserveState: true,
           preserveScroll: true,
+          onStart: () => this.tableIsLoading = true,
+          onFinish: () => this.tableIsLoading = false,
         })
       },500),
       deep: true

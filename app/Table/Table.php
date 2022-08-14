@@ -28,7 +28,7 @@ class Table
         $sortBy   = $this->request->input('sortBy');
         $sortDesc = $this->request->input('sortDesc');
         $global   = $this->request->input('global');
-        $filters  = $this->request->except(['sortBy','sortDesc','global']);
+        $filters  = $this->request->except(['sortBy','sortDesc','global','page']);
 
         return [
             'sortBy'   => $sortBy,

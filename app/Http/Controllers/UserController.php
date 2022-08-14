@@ -6,6 +6,7 @@ use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Validator;
 use Inertia\Inertia;
 
 class UserController extends Controller
@@ -22,7 +23,7 @@ class UserController extends Controller
             $query->where('type',$request->input('type'));
         })->when($request->input('global'),function($query) use($request) {
             $query->where('name','LIKE','%'.$request->input('global').'%')->orWhere('username','LIKE','%'.$request->input('global').'%');
-        })->paginate(10)->withQueryString();
+        })->paginate()->withQueryString();
         return Inertia::render('Users/Index',[
             'records' => $users
         ])->table();
@@ -43,6 +44,34 @@ class UserController extends Controller
             'password' => Hash::make($request->input('password')),
             'type' => $request->input('type')
         ]);
+
+        return redirect()->back()->with('success','با موفقیت انجام شد');
+    }
+
+    public function update(Request $request, User $user)
+    {
+        $request->validate([
+            'name' => 'required',
+            'username' => 'required',
+            'type' => 'required|in:USER,ADMIN,SUPERADMIN',
+        ]);
+
+        $user->update([
+            'name' => $request->input('name'),
+            'username' => $request->input('username'),
+            'password' => Hash::make($request->input('password')),
+            'type' => $request->input('type')
+        ]);
+
+        return redirect()->back()->with('success','با موفقیت انجام شد');
+    }
+
+    public function destroy(User $user)
+    {
+        if(!$user->exists)
+            return redirect()->back()->with('error','در حذف مشکلی به وجود آمد');
+
+        $user->delete();
 
         return redirect()->back()->with('success','با موفقیت انجام شد');
     }
